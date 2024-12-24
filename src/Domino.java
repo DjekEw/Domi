@@ -104,6 +104,21 @@ class DominoGame {
         return piece.matches(leftEnd) || piece.matches(rightEnd);
     }
 
+    public boolean canPlayerMove() {
+        for (DominoPiece piece : playerHand) {
+            if (canPlayPiece(piece)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void drawForPlayer() {
+        if (!deck.isEmpty()) {
+            playerHand.add(deck.remove(0));
+        }
+    }
+
     public void computerMove() {
         for (DominoPiece piece : computerHand) {
             if (playPiece(piece, false)) {
@@ -134,12 +149,49 @@ class DominoPanel extends JPanel {
         g.drawString(label, 10, 20);
         int x = 10;
         int y = 40;
+        int rowHeight = 70;
+        int piecesPerRow = getWidth() / 70;
 
-        for (DominoPiece piece : pieces) {
-            g.drawRect(x, y, 50, 25);
-            g.drawString(piece.getLeft() + "|" + piece.getRight(), x + 10, y + 17);
-            x += 60;
+        for (int i = 0; i < pieces.size(); i++) {
+            DominoPiece piece = pieces.get(i);
+            drawDomino(g, x, y, piece);
+            x += 70;
+
+            if ((i + 1) % piecesPerRow == 0) {
+                x = 10;
+                y += rowHeight;
+            }
         }
+    }
+
+    private void drawDomino(Graphics g, int x, int y, DominoPiece piece) {
+        g.setColor(Color.WHITE);
+        g.fillRect(x, y, 60, 30);
+        g.setColor(Color.BLACK);
+        g.drawRect(x, y, 60, 30);
+        g.drawLine(x + 30, y, x + 30, y + 30);
+        drawDots(g, x + 10, y + 10, piece.getLeft());
+        drawDots(g, x + 40, y + 10, piece.getRight());
+    }
+
+    private void drawDots(Graphics g, int x, int y, int value) {
+        int[][] positions = {
+                {},
+                {0, 0},
+                {-5, -5, 5, 5},
+                {-5, -5, 0, 0, 5, 5},
+                {-5, -5, -5, 5, 5, -5, 5, 5},
+                {-5, -5, -5, 5, 0, 0, 5, -5, 5, 5},
+                {-5, -5, -5, 5, 0, -5, 0, 5, 5, -5, 5, 5}
+        };
+        for (int i = 0; i < positions[value].length; i += 2) {
+            g.fillOval(x + positions[value][i], y + positions[value][i + 1], 4, 4);
+        }
+    }
+
+    @Override
+    public Dimension getPreferredSize() {
+        return new Dimension(800, 100);
     }
 }
 
@@ -147,16 +199,32 @@ class HandPanel extends JPanel {
     private final List<DominoPiece> hand;
     private final DominoGame game;
     private final JPanel boardPanel;
+    private final JButton drawButton;
 
     public HandPanel(List<DominoPiece> hand, DominoGame game, JPanel boardPanel) {
         this.hand = hand;
         this.game = game;
         this.boardPanel = boardPanel;
 
+        drawButton = new JButton("Draw");
+        drawButton.addActionListener(e -> {
+            if (!game.canPlayerMove()) {
+                if (!game.getDeck().isEmpty()) {
+                    game.drawForPlayer();
+                    repaint();
+                } else {
+                    JOptionPane.showMessageDialog(null, "No moves left and deck is empty! Game over.");
+                }
+            } else {
+                JOptionPane.showMessageDialog(null, "You can still play a piece!");
+            }
+        });
+        add(drawButton);
+
         addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                int index = e.getX() / 60;
+                int index = e.getX() / 70;
                 if (index >= 0 && index < hand.size()) {
                     DominoPiece piece = hand.get(index);
                     if (game.playPiece(piece, true)) {
@@ -183,17 +251,54 @@ class HandPanel extends JPanel {
         g.drawString("Your Hand", 10, 20);
         int x = 10;
         int y = 40;
+        int rowHeight = 70;
+        int piecesPerRow = getWidth() / 70;
 
-        for (DominoPiece piece : hand) {
-            g.drawRect(x, y, 50, 25);
-            g.drawString(piece.getLeft() + "|" + piece.getRight(), x + 10, y + 17);
-            x += 60;
+        for (int i = 0; i < hand.size(); i++) {
+            DominoPiece piece = hand.get(i);
+            if (game.canPlayPiece(piece)) {
+                g.setColor(Color.GREEN);
+            } else {
+                g.setColor(Color.RED);
+            }
+            drawDomino(g, x, y, piece);
+            x += 70;
+
+            if ((i + 1) % piecesPerRow == 0) {
+                x = 10;
+                y += rowHeight;
+            }
+        }
+    }
+
+    private void drawDomino(Graphics g, int x, int y, DominoPiece piece) {
+        g.setColor(Color.WHITE);
+        g.fillRect(x, y, 60, 30);
+        g.setColor(Color.BLACK);
+        g.drawRect(x, y, 60, 30);
+        g.drawLine(x + 30, y, x + 30, y + 30);
+        drawDots(g, x + 10, y + 10, piece.getLeft());
+        drawDots(g, x + 40, y + 10, piece.getRight());
+    }
+
+    private void drawDots(Graphics g, int x, int y, int value) {
+        int[][] positions = {
+                {},
+                {0, 0},
+                {-5, -5, 5, 5},
+                {-5, -5, 0, 0, 5, 5},
+                {-5, -5, -5, 5, 5, -5, 5, 5},
+                {-5, -5, -5, 5, 0, 0, 5, -5, 5, 5},
+                {-5, -5, -5, 5, 0, -5, 0, 5, 5, -5, 5, 5}
+        };
+        for (int i = 0; i < positions[value].length; i += 2) {
+            g.fillOval(x + positions[value][i], y + positions[value][i + 1], 4, 4);
         }
     }
 
     @Override
     public Dimension getPreferredSize() {
-        return new Dimension(600, 100);
+        return new Dimension(800, 100);
     }
 }
 
