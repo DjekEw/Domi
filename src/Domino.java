@@ -126,10 +126,10 @@ class DominoGame {
                 return;
             }
         }
-        // Draw piece if no valid move
+        // Хода нет - тянуть
         if (!deck.isEmpty()) {
             computerHand.add(deck.remove(0));
-            computerMove(); // Retry move after drawing
+            computerMove(); // Попытка хода
         }
     }
 }
@@ -206,17 +206,17 @@ class HandPanel extends JPanel {
         this.game = game;
         this.boardPanel = boardPanel;
 
-        drawButton = new JButton("Draw");
+        drawButton = new JButton("Тянуть");
         drawButton.addActionListener(e -> {
             if (!game.canPlayerMove()) {
                 if (!game.getDeck().isEmpty()) {
                     game.drawForPlayer();
                     repaint();
                 } else {
-                    JOptionPane.showMessageDialog(null, "No moves left and deck is empty! Game over.");
+                    JOptionPane.showMessageDialog(null, "Нет ходов и добора! Конец.");
                 }
             } else {
-                JOptionPane.showMessageDialog(null, "You can still play a piece!");
+                JOptionPane.showMessageDialog(null, "Есть доступный ход!");
             }
         });
         add(drawButton);
@@ -232,13 +232,13 @@ class HandPanel extends JPanel {
                         boardPanel.repaint();
                         repaint();
 
-                        // Trigger computer's turn
+                        // Ход компутера
                         SwingUtilities.invokeLater(() -> {
                             game.computerMove();
                             boardPanel.repaint();
                         });
                     } else {
-                        JOptionPane.showMessageDialog(null, "Invalid move! Try another piece.");
+                        JOptionPane.showMessageDialog(null, "Неверный ход.");
                     }
                 }
             }
@@ -248,7 +248,7 @@ class HandPanel extends JPanel {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        g.drawString("Your Hand", 10, 20);
+        g.drawString("Ваша рука", 10, 20);
         int x = 10;
         int y = 40;
         int rowHeight = 70;
