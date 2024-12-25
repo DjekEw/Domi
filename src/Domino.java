@@ -25,6 +25,14 @@ class DominoPiece {
         return left == value || right == value;
     }
 
+    public boolean isDouble() {
+        return left == right;
+    }
+
+    public DominoPiece flipped() {
+        return new DominoPiece(right, left);
+    }
+
     @Override
     public String toString() {
         return "[" + left + "|" + right + "]";
@@ -86,10 +94,14 @@ class DominoGame {
                 int leftEnd = board.get(0).getLeft();
                 int rightEnd = board.get(board.size() - 1).getRight();
 
-                if (piece.matches(leftEnd)) {
+                if (piece.getRight() == leftEnd) {
                     board.add(0, piece);
-                } else if (piece.matches(rightEnd)) {
+                } else if (piece.getLeft() == leftEnd) {
+                    board.add(0, piece.flipped());
+                } else if (piece.getLeft() == rightEnd) {
                     board.add(piece);
+                } else if (piece.getRight() == rightEnd) {
+                    board.add(piece.flipped());
                 }
             }
             return true;
@@ -101,7 +113,9 @@ class DominoGame {
         if (board.isEmpty()) return true;
         int leftEnd = board.get(0).getLeft();
         int rightEnd = board.get(board.size() - 1).getRight();
-        return piece.matches(leftEnd) || piece.matches(rightEnd);
+        return piece.getLeft() == leftEnd || piece.getRight() == leftEnd ||
+                piece.getLeft() == rightEnd || piece.getRight() == rightEnd ||
+                (piece.isDouble() && (piece.getLeft() == leftEnd || piece.getLeft() == rightEnd));
     }
 
     public boolean canPlayerMove() {
@@ -262,6 +276,9 @@ class HandPanel extends JPanel {
             @Override
             public void mouseClicked(MouseEvent e) {
                 int index = e.getX() / 70;
+                int row = e.getY() / 70;
+                index += row * (getWidth() / 70);
+
                 if (index >= 0 && index < hand.size()) {
                     DominoPiece piece = hand.get(index);
                     if (game.playPiece(piece, true)) {
@@ -335,7 +352,7 @@ class HandPanel extends JPanel {
 
     @Override
     public Dimension getPreferredSize() {
-        return new Dimension(800, 100);
+        return new Dimension(800, Math.max(100, (hand.size() / (getWidth() / 70) + 1) * 70));
     }
 }
 
