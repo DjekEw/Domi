@@ -113,10 +113,44 @@ class DominoGame {
         return false;
     }
 
+    public boolean canComputerMove() {
+        for (DominoPiece piece : computerHand) {
+            if (canPlayPiece(piece)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public void drawForPlayer() {
         if (!deck.isEmpty()) {
             playerHand.add(deck.remove(0));
         }
+    }
+
+    public void drawForComputer() {
+        if (!deck.isEmpty()) {
+            computerHand.add(deck.remove(0));
+        }
+    }
+
+    public void redistributeHands() {
+        List<DominoPiece> allPieces = new ArrayList<>();
+        allPieces.addAll(playerHand);
+        allPieces.addAll(computerHand);
+        allPieces.addAll(deck);
+        playerHand.clear();
+        computerHand.clear();
+        deck.clear();
+
+        Collections.shuffle(allPieces);
+
+        for (int i = 0; i < 5; i++) {
+            if (!allPieces.isEmpty()) playerHand.add(allPieces.remove(0));
+            if (!allPieces.isEmpty()) computerHand.add(allPieces.remove(0));
+        }
+
+        deck.addAll(allPieces);
     }
 
     public void computerMove() {
@@ -126,10 +160,9 @@ class DominoGame {
                 return;
             }
         }
-        // Хода нет - тянуть
         if (!deck.isEmpty()) {
-            computerHand.add(deck.remove(0));
-            computerMove(); // Попытка хода
+            drawForComputer();
+            computerMove();
         }
     }
 }
@@ -212,6 +245,10 @@ class HandPanel extends JPanel {
                 if (!game.getDeck().isEmpty()) {
                     game.drawForPlayer();
                     repaint();
+                } else if (!game.canPlayerMove() && !game.canComputerMove()) {
+                    game.redistributeHands();
+                    boardPanel.repaint();
+                    repaint();
                 } else {
                     JOptionPane.showMessageDialog(null, "Нет ходов и добора! Конец.");
                 }
@@ -232,7 +269,7 @@ class HandPanel extends JPanel {
                         boardPanel.repaint();
                         repaint();
 
-                        // Ход компутера
+                        // Trigger computer's turn
                         SwingUtilities.invokeLater(() -> {
                             game.computerMove();
                             boardPanel.repaint();
@@ -248,7 +285,7 @@ class HandPanel extends JPanel {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        g.drawString("Ваша рука", 10, 20);
+        g.drawString("Your Hand", 10, 20);
         int x = 10;
         int y = 40;
         int rowHeight = 70;
